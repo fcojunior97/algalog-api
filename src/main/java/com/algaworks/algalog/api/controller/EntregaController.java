@@ -1,6 +1,7 @@
 package com.algaworks.algalog.api.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +35,7 @@ public class EntregaController {
 	private FinalizacaoEntregaService finalizacaoEntregaService;
 	private EntregaAssembler entregaAssembler;
 	
+	
 	@GetMapping
 	public List<EntregaModel> listar() {
 		List<Entrega> entregas = entregaRepository.findAll();
@@ -54,6 +56,19 @@ public class EntregaController {
 		
 		Entrega entregaSolicitada = solicitacaoEntregaService.solicitar(entrega);
 		return entregaAssembler.toModel(entregaSolicitada);
+	}
+	
+	@PutMapping("/{idEntrega}")
+	public ResponseEntity<EntregaModel> atualizar(@PathVariable Long idEntrega, @Valid @RequestBody EntregaInput entregaInput) {
+		
+		Optional<Entrega> entregaAtual = entregaRepository.findById(idEntrega);
+		
+		if(entregaAtual.isEmpty()) {
+			return ResponseEntity.notFound().build();
+		}
+		
+		solicitacaoEntregaService.alterarDadosSolicitacao(entregaAtual.get(), entregaInput);
+		return ResponseEntity.ok(entregaAssembler.toModel(entregaAtual.get()));
 	}
 	
 	@ResponseStatus(HttpStatus.NO_CONTENT)
