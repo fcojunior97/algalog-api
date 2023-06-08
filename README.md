@@ -23,6 +23,7 @@ Esta API fornece os seguintes endpoints:
 - Lista todas as entregas:  `GET/entregas`
 - Solicita entrega: `POST/entregas`
 - Busca entregas por ID: `GET/entregas/2`
+- Alterar dados de solicitação de entrega: `PUT/entregas/2`
 - Finaliza uma entrega: `PUT/entregas/2/finalizacao`
 
 #### Ocorrencias de entrega
