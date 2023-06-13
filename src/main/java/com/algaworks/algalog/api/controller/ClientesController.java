@@ -46,26 +46,21 @@ public class ClientesController {
 	
 	@GetMapping
 	public List<ClienteModel> listar() {
-		
 		List<Cliente> clientes = clienteRepository.findAll();
 		return clienteAssembler.toCollectionModel(clientes);
 	}
 	
 	@GetMapping("/buscaPorNome")
 	public List<ClienteModel> buscarPorNome(@RequestParam String nome) {
-		List<Cliente> clientes = clienteRepository.findByNomeContaining(nome);
+		List<Cliente> clientes = catalogoClienteService.buscarPorNome(nome);
 		return clienteAssembler.toCollectionModel(clientes);
 	}
 	
 	@GetMapping("/{idCliente}")
-	public ResponseEntity<ClienteModel> buscarPorId(@PathVariable Long idCliente) {
-		Optional<Cliente> cliente =  clienteRepository.findById(idCliente);
+	public ClienteModel buscarPorId(@PathVariable Long idCliente) {
 		
-		if(cliente.isPresent()) {
-			return ResponseEntity.ok(clienteAssembler.toModel(cliente.get()));
-		}
-		
-		return ResponseEntity.notFound().build();	
+		Cliente cliente =  catalogoClienteService.buscarPorId(idCliente);
+		return clienteAssembler.toModel(cliente);	
 	}
 	
 	@PostMapping
@@ -80,16 +75,12 @@ public class ClientesController {
 	@PutMapping("/{idCliente}")
 	public ResponseEntity<ClienteModel> atualizar(@PathVariable Long idCliente, @Valid @RequestBody ClienteInput clienteInput) {
 		
-		Optional<Cliente> clienteAtual = clienteRepository.findById(idCliente);
+		Cliente clienteAtual =  catalogoClienteService.buscarPorId(idCliente);
 		
-		if(clienteAtual.isEmpty()) {
-			return ResponseEntity.notFound().build();
-		}
+		catalogoClienteService.alterarDadosCliente(clienteAtual, clienteInput);
+		clienteAtual = catalogoClienteService.salvar(clienteAtual);
 		
-		catalogoClienteService.alterarDadosCliente(clienteAtual.get(), clienteInput);
-		Cliente cliente = catalogoClienteService.salvar(clienteAtual.get());
-		
-		return ResponseEntity.ok(clienteAssembler.toModel(cliente));
+		return ResponseEntity.ok(clienteAssembler.toModel(clienteAtual));
 				
 	}
 	

@@ -1,5 +1,7 @@
 package com.algaworks.algalog.domain.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +27,10 @@ public class CatalogoClienteService {
 		return clienteRepository.findById(clienteId)
 				.orElseThrow(() -> new NegocioException("Cliente não encontrado"));
 	}
+	
+	public List<Cliente> buscarPorNome(String nome) {
+		return clienteRepository.findByNomeContaining(nome);
+	} 
 	
 	@Transactional
 	public Cliente salvar(Cliente cliente) {
