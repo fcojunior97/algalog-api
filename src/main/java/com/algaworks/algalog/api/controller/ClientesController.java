@@ -77,20 +77,19 @@ public class ClientesController {
 		return clienteAssembler.toModel(clienteSalvo);
 	}
 	
-	// TODO Renomear a assinatura do método e refatorar
 	@PutMapping("/{idCliente}")
-	public ResponseEntity<ClienteModel> buscarPorId(@PathVariable Long idCliente, @Valid @RequestBody ClienteInput clienteInput) {
+	public ResponseEntity<ClienteModel> atualizar(@PathVariable Long idCliente, @Valid @RequestBody ClienteInput clienteInput) {
 		
-		if(!clienteRepository.existsById(idCliente)) {
+		Optional<Cliente> clienteAtual = clienteRepository.findById(idCliente);
+		
+		if(clienteAtual.isEmpty()) {
 			return ResponseEntity.notFound().build();
 		}
 		
-		Cliente cliente = clienteInputDisassembler.toDomainObject(clienteInput);
-		cliente.setId(idCliente);
-		cliente = catalogoClienteService.salvar(cliente);
-		ClienteModel clienteModel = clienteAssembler.toModel(cliente);
+		catalogoClienteService.alterarDadosCliente(clienteAtual.get(), clienteInput);
+		Cliente cliente = catalogoClienteService.salvar(clienteAtual.get());
 		
-		return ResponseEntity.ok(clienteModel);
+		return ResponseEntity.ok(clienteAssembler.toModel(cliente));
 				
 	}
 	
