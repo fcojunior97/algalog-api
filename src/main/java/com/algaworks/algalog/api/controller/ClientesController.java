@@ -17,6 +17,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.algaworks.algalog.api.assembler.ClienteAssembler;
+import com.algaworks.algalog.api.assembler.ClienteInputDisassembler;
+import com.algaworks.algalog.api.model.ClienteModel;
+import com.algaworks.algalog.api.model.input.ClienteInput;
 import com.algaworks.algalog.domain.model.Cliente;
 import com.algaworks.algalog.domain.repository.ClienteRepository;
 import com.algaworks.algalog.domain.service.CatalogoClienteService;
@@ -34,22 +38,31 @@ public class ClientesController {
 	@Autowired
 	private CatalogoClienteService catalogoClienteService;
 	
+	@Autowired
+	private ClienteAssembler clienteAssembler;
+	
+	@Autowired
+	private ClienteInputDisassembler clienteInputDisassembler;
+	
 	@GetMapping
-	public List<Cliente> listar() {
-		return clienteRepository.findAll();
+	public List<ClienteModel> listar() {
+		
+		List<Cliente> clientes = clienteRepository.findAll();
+		return clienteAssembler.toCollectionModel(clientes);
 	}
 	
 	@GetMapping("/buscaPorNome")
-	public List<Cliente> buscarPorNome(@RequestParam String nome) {
-		return clienteRepository.findByNomeContaining(nome);
+	public List<ClienteModel> buscarPorNome(@RequestParam String nome) {
+		List<Cliente> clientes = clienteRepository.findByNomeContaining(nome);
+		return clienteAssembler.toCollectionModel(clientes);
 	}
 	
 	@GetMapping("/{idCliente}")
-	public ResponseEntity<Cliente> buscarPorId(@PathVariable Long idCliente) {
+	public ResponseEntity<ClienteModel> buscarPorId(@PathVariable Long idCliente) {
 		Optional<Cliente> cliente =  clienteRepository.findById(idCliente);
 		
 		if(cliente.isPresent()) {
-			return ResponseEntity.ok(cliente.get());
+			return ResponseEntity.ok(clienteAssembler.toModel(cliente.get()));
 		}
 		
 		return ResponseEntity.notFound().build();	
@@ -57,21 +70,27 @@ public class ClientesController {
 	
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	public Cliente adicionar(@Valid @RequestBody Cliente cliente) {
-		return catalogoClienteService.salvar(cliente);
+	public ClienteModel adicionar(@Valid @RequestBody ClienteInput clienteInput) {
+		
+		Cliente cliente = clienteInputDisassembler.toDomainObject(clienteInput);
+		Cliente clienteSalvo = catalogoClienteService.salvar(cliente);
+		return clienteAssembler.toModel(clienteSalvo);
 	}
 	
+	// TODO Renomear a assinatura do método e refatorar
 	@PutMapping("/{idCliente}")
-	public ResponseEntity<Cliente> buscarPorId(@PathVariable Long idCliente, @Valid @RequestBody Cliente cliente) {
+	public ResponseEntity<ClienteModel> buscarPorId(@PathVariable Long idCliente, @Valid @RequestBody ClienteInput clienteInput) {
 		
 		if(!clienteRepository.existsById(idCliente)) {
 			return ResponseEntity.notFound().build();
 		}
 		
+		Cliente cliente = clienteInputDisassembler.toDomainObject(clienteInput);
 		cliente.setId(idCliente);
 		cliente = catalogoClienteService.salvar(cliente);
+		ClienteModel clienteModel = clienteAssembler.toModel(cliente);
 		
-		return ResponseEntity.ok(cliente);
+		return ResponseEntity.ok(clienteModel);
 				
 	}
 	
